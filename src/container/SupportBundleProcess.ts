@@ -9,7 +9,7 @@ import { SupportBundleClientsFactory } from '../build/SupportBundleClientsFactor
 export class SupportBundleProcess extends ProcessContainer {
 
     public constructor() {
-        super("supportbiundle", "Support bundle for iQuipsys Positron");
+        super("supportbundle", "Support bundle for iQuipsys Positron");
         this._factories.add(new SupportBundleServicesFactory);
         this._factories.add(new SupportBundleClientsFactory);
         this._factories.add(new DefaultRpcFactory);
