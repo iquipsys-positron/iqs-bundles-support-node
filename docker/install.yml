@@ -1,0 +1,81 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: iqs-positron
+  name: iqs-bundles-support-node-deploy
+spec:
+  replicas: 1
+  minReadySeconds: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: iqs-bundles-support-node
+    spec: 
+      containers:
+      - name: iqs-bundles-support-node-pod
+        image: registry.gitlab.com/iqs-bundles/iqs-bundles-support-node:1.0.0-1-rc
+        ports:
+        - containerPort: 8080
+          name: support
+        env:
+        - name: ENV_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: iqs-positron-config
+              key: env_name
+        - name: MONGO_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: iqs-positron-config
+              key: mongo_enabled
+        - name: MONGO_SERVICE_URI
+          valueFrom:
+            secretKeyRef:
+              name: iqs-positron-secret
+              key: mongo_service_uri
+        - name: AWS_REGION
+          valueFrom:
+            secretKeyRef:
+              name: iqs-positron-secret
+              key: aws_region
+        - name: AWS_ACCESS_ID
+          valueFrom:
+            secretKeyRef:
+              name: iqs-positron-secret
+              key: aws_access_id
+        - name: AWS_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: iqs-positron-secret
+              key: aws_access_key
+        readinessProbe:
+          httpGet:
+            path: /heartbeat
+            port: 8080
+          initialDelaySeconds: 120
+          periodSeconds: 40
+          timeoutSeconds: 6
+      imagePullSecrets:
+      - name: gitlab-docker-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: iqs-positron
+  name: iqs-bundles-support
+  labels: 
+    app: iqs-bundles-support-node
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    nodePort: 30008
+    protocol: TCP
+    name: support
+  selector:
+    app: iqs-bundles-support-node
